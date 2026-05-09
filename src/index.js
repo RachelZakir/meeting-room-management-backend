@@ -1,4 +1,4 @@
-//Import packages express, dotenv, cors and morgan
+// Import packages express, dotenv, cors and morgan
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
@@ -7,7 +7,7 @@ const cookieParser = require('cookie-parser');
 
 dotenv.config();
 
-//import my route and middleware
+// Import routes and middleware
 const userRoutes = require('./routes/userRoutes');
 const roomRoutes = require('./routes/roomRoutes');
 const errorHandler = require('./middlewares/errorHandler');
@@ -19,23 +19,15 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ✅ Allowed origins
-const allowedOrigins = [
-  'http://localhost:3000',
-  'https://meeting-room-management-frontend.vercel.app',
-];
-
-// ✅ Correct CORS setup
 const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: [
+    'http://localhost:3000',
+    'https://meeting-room-management-frontend.vercel.app',
+  ],
   credentials: true,
 };
 
+// ✅ Apply CORS once, globally
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions)); // handle preflight requests
 
