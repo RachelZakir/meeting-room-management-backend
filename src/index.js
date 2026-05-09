@@ -21,12 +21,20 @@ const app = express(); // create my express app
 const PORT = process.env.PORT || 3000; // Set port
 
 // Middleware
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://meeting-room-management-frontend.vercel.app',
+];
+
 app.use(
   cors({
-    origin: 'http://localhost:3000', // your Next.js frontend
-    credentials: true, // allow cookies/sessions
+    origin: allowedOrigins,
+    credentials: true,
   })
-); //Allows frontend to access backend
+);
+
+// Handle preflight requests
+app.options('*', cors());
 app.use(express.json()); //Allows server to read JSON data
 app.use(morgan('dev')); // log all requests
 app.use(cookieParser());
