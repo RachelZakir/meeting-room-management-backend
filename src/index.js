@@ -1,14 +1,12 @@
-// this is to test branching on git
-//this is to test branching on git 2nd time dear
-// now ots to check the ci and cd
 //Import packages express, dotenv, cors and morgan
-const express = require('express'); // create z server and api
-const dotenv = require('dotenv'); // loads my.env variables
+const express = require('express');
+const dotenv = require('dotenv');
 const cors = require('cors');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 
-dotenv.config(); // load my env variables read my env file
+dotenv.config();
+
 //import my route and middleware
 const userRoutes = require('./routes/userRoutes');
 const roomRoutes = require('./routes/roomRoutes');
@@ -17,36 +15,36 @@ const authRoutes = require('./routes/authRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const adminExportRoutes = require('./routes/adminExportRoutes');
 
-const app = express(); // create my express app
-const PORT = process.env.PORT || 3000; // Set port
+const app = express();
+const PORT = process.env.PORT || 3000;
 
+// ✅ Allowed origins
 const allowedOrigins = [
   'http://localhost:3000',
   'https://meeting-room-management-frontend.vercel.app',
 ];
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    credentials: true,
-  })
-);
+// ✅ Correct CORS setup
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+};
 
-// Handle preflight requests globally
-app.options('*', cors());
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // handle preflight requests
 
-// Then other middleware
+// Other middleware
 app.use(express.json());
 app.use(morgan('dev'));
 app.use(cookieParser());
 
-// Routes its the end-point/homepage for apis
+// Routes
 app.get('/', (req, res) => {
   res.json({
     message: 'Meeting Room Management API',
