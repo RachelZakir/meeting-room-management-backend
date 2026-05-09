@@ -75,12 +75,10 @@ const refresh = (req, res) => {
     process.env.JWT_ACCESS_SECRET,
     { expiresIn: process.env.JWT_ACCESS_EXPIRY }
   );
-
-  // ✅ Cookies fixed for HTTPS
   res.cookie('accessToken', newAccessToken, {
     httpOnly: true,
-    secure: true,
-    sameSite: 'none',
+    secure: true, // must be true on HTTPS
+    sameSite: 'none', // allow cross-site cookies
     maxAge: 15 * 60 * 1000,
   });
 
