@@ -20,7 +20,6 @@ const adminExportRoutes = require('./routes/adminExportRoutes');
 const app = express(); // create my express app
 const PORT = process.env.PORT || 3000; // Set port
 
-// Middleware
 const allowedOrigins = [
   'http://localhost:3000',
   'https://meeting-room-management-frontend.vercel.app',
@@ -28,23 +27,17 @@ const allowedOrigins = [
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
+    origin: allowedOrigins,
     credentials: true,
   })
 );
 
-// Handle preflight requests
+// Handle preflight requests globally
 app.options('*', cors());
 
-// Handle preflight requests
-app.use(express.json()); //Allows server to read JSON data
-app.use(morgan('dev')); // log all requests
+// Then other middleware
+app.use(express.json());
+app.use(morgan('dev'));
 app.use(cookieParser());
 
 // Routes its the end-point/homepage for apis
