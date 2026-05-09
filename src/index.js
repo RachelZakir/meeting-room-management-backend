@@ -1,4 +1,3 @@
-// Import packages express, dotenv, cors and morgan
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
@@ -7,7 +6,6 @@ const cookieParser = require('cookie-parser');
 
 dotenv.config();
 
-// Import routes and middleware
 const userRoutes = require('./routes/userRoutes');
 const roomRoutes = require('./routes/roomRoutes');
 const errorHandler = require('./middlewares/errorHandler');
@@ -18,25 +16,23 @@ const adminExportRoutes = require('./routes/adminExportRoutes');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ✅ Allowed origins
 const corsOptions = {
   origin: [
     'http://localhost:3000',
     'https://meeting-room-management-frontend.vercel.app',
   ],
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 };
 
-// ✅ Apply CORS once, globally
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // handle preflight requests
+app.options('*', cors(corsOptions)); // preflight
 
-// Other middleware
 app.use(express.json());
 app.use(morgan('dev'));
 app.use(cookieParser());
 
-// Routes
 app.get('/', (req, res) => {
   res.json({
     message: 'Meeting Room Management API',
@@ -59,8 +55,4 @@ app.use(errorHandler);
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📝 API available at http://localhost:${PORT}`);
-  console.log(`📋 Test endpoints:`);
-  console.log(`   POST http://localhost:${PORT}/api/users`);
-  console.log(`   POST http://localhost:${PORT}/api/rooms`);
-  console.log(`   GET http://localhost:${PORT}/api/rooms?capacity=5&limit=10`);
 });
