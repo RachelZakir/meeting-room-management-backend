@@ -68,17 +68,17 @@ const refresh = (req, res) => {
   }
 
   const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
-
-  // ✅ properly defined before use
   const newAccessToken = jwt.sign(
     { id: decoded.id, role: decoded.role },
     process.env.JWT_ACCESS_SECRET,
     { expiresIn: process.env.JWT_ACCESS_EXPIRY }
   );
+
+  // ✅ Cookies fixed for HTTPS
   res.cookie('accessToken', newAccessToken, {
     httpOnly: true,
-    secure: true, // must be true on HTTPS
-    sameSite: 'none', // allow cross-site cookies
+    secure: true,
+    sameSite: 'none',
     maxAge: 15 * 60 * 1000,
   });
 

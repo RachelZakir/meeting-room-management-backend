@@ -16,6 +16,7 @@ const adminExportRoutes = require('./routes/adminExportRoutes');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// ✅ CORS config
 const corsOptions = {
   origin: [
     'http://localhost:3000',
@@ -26,11 +27,16 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization'],
 };
 
+// ✅ Apply CORS first
 app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // handle preflight requests
+
+// Other middleware
 app.use(express.json());
 app.use(morgan('dev'));
 app.use(cookieParser());
 
+// Routes
 app.get('/', (req, res) => {
   res.json({
     message: 'Meeting Room Management API',
