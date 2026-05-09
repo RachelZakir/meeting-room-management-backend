@@ -30,10 +30,11 @@ const login = async (req, res) => {
     { expiresIn: process.env.JWT_REFRESH_EXPIRY }
   );
 
+  // ✅ Cookies configured for HTTPS cross-origin
   res.cookie('accessToken', accessToken, {
     httpOnly: true,
-    secure: true, // ✅ must be true on HTTPS
-    sameSite: 'none', // ✅ allow cross-site cookies
+    secure: true,
+    sameSite: 'none',
     maxAge: 15 * 60 * 1000,
   });
 
@@ -44,7 +45,6 @@ const login = async (req, res) => {
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 
-  // IMPORTANT: Include user information in the response
   res.json({
     success: true,
     message: 'Login successful',
@@ -68,20 +68,27 @@ const refresh = (req, res) => {
   }
 
   const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+
+  // ✅ properly defined before use
   const newAccessToken = jwt.sign(
     { id: decoded.id, role: decoded.role },
     process.env.JWT_ACCESS_SECRET,
     { expiresIn: process.env.JWT_ACCESS_EXPIRY }
   );
 
+  // ✅ Cookies fixed for HTTPS
   res.cookie('accessToken', newAccessToken, {
     httpOnly: true,
-    secure: false,
-    sameSite: 'strict',
+    secure: true,
+    sameSite: 'none',
     maxAge: 15 * 60 * 1000,
   });
 
-  res.json({ success: true, message: 'Token refreshed' });
+  res.json({
+    success: true,
+    message: 'Token refreshed',
+    accessToken: newAccessToken,
+  });
 };
 
 module.exports = { login, refresh };
