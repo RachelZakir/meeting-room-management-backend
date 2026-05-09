@@ -28,13 +28,21 @@ const allowedOrigins = [
 
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
   })
 );
 
 // Handle preflight requests
 app.options('*', cors());
+
+// Handle preflight requests
 app.use(express.json()); //Allows server to read JSON data
 app.use(morgan('dev')); // log all requests
 app.use(cookieParser());
