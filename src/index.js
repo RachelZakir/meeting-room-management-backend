@@ -28,8 +28,9 @@ const corsOptions = {
 
 // ✅ Apply CORS first
 app.use(cors(corsOptions));
-// ✅ Either remove or fix this line
-// app.options('/*', cors(corsOptions));
+// ✅ Remove or replace the invalid line
+// app.options('*', cors(corsOptions)); ❌
+// app.options('/*', cors(corsOptions)); ✅ optional
 
 app.use(express.json());
 app.use(morgan('dev'));
