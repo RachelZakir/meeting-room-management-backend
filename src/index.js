@@ -15,47 +15,69 @@ const adminExportRoutes = require('./routes/adminExportRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// ✅ FIXED CORS CONFIGURATION
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'https://meeting-room-management-frontend.vercel.app',
+  'https://meeting-room-management-frontend.vercel.app',
+  /\.vercel\.app$/,
+  /\.onrender\.com$/,
+];
+
 const corsOptions = {
   origin: function (origin, callback) {
-    const allowedOrigins = [
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'https://meeting-room-management-frontend.vercel.app',
-      'https://meeting-room-management-frontend.vercel.app/',
-      /\.vercel\.app$/,
-      /\.onrender\.com$/,
-    ];
-
     // Allow requests with no origin (like mobile apps or curl)
     if (!origin) return callback(null, true);
 
     // Check if origin is allowed
-    const allowed = allowedOrigins.some((allowedOrigin) => {
+    const isAllowed = allowedOrigins.some((allowedOrigin) => {
       if (allowedOrigin instanceof RegExp) {
         return allowedOrigin.test(origin);
       }
       return allowedOrigin === origin;
     });
 
-    if (allowed) {
+    if (isAllowed) {
       callback(null, true);
     } else {
-      console.log('Blocked origin:', origin);
+      console.log('❌ Blocked CORS request from:', origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
-  exposedHeaders: ['Set-Cookie'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'Cookie',
+    'X-Requested-With',
+  ],
+  exposedHeaders: ['Set-Cookie', 'Authorization'],
+  optionsSuccessStatus: 200,
 };
 
-// Apply CORS before all routes
+// ✅ Apply CORS middleware BEFORE all routes
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // Handle preflight requests
+
+// ✅ Handle preflight requests explicitly
+app.options('*', cors(corsOptions));
+
+// ✅ Log all requests for debugging (put after CORS)
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path} - Origin: ${req.headers.origin}`);
+  next();
+});
+
 app.use(express.json());
 app.use(morgan('dev'));
 app.use(cookieParser());
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
 
 app.get('/', (req, res) => {
   res.json({
@@ -69,6 +91,7 @@ app.get('/', (req, res) => {
   });
 });
 
+// Routes
 app.use('/api', authRoutes);
 app.use('/api', userRoutes);
 app.use('/api', roomRoutes);
@@ -79,4 +102,5 @@ app.use(errorHandler);
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📝 API available at http://localhost:${PORT}`);
+  console.log(`✅ CORS enabled for origins:`, allowedOrigins);
 });
