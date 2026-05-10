@@ -16,9 +16,9 @@ const adminExportRoutes = require('./routes/adminExportRoutes');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ✅ SIMPLE, WORKING CORS CONFIGURATION
+// ✅ CORS Configuration - FIXED VERSION (no '*' in app.options)
 const corsOptions = {
-  origin: 'https://meeting-room-management-frontend.vercel.app', // Your exact frontend URL
+  origin: 'https://meeting-room-management-frontend.vercel.app',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: [
@@ -34,14 +34,11 @@ const corsOptions = {
 // Apply CORS middleware
 app.use(cors(corsOptions));
 
-// Handle preflight requests explicitly
-app.options('*', cors(corsOptions));
-
-// Logging middleware to debug
+// ✅ FIXED: Use app.use for OPTIONS instead of app.options('*', ...)
 app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  console.log('Origin:', req.headers.origin);
-  console.log('CORS Headers set:', res.getHeaders());
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
   next();
 });
 
@@ -49,12 +46,11 @@ app.use(express.json());
 app.use(morgan('dev'));
 app.use(cookieParser());
 
-// Test endpoint to verify CORS is working
+// Test endpoint
 app.get('/test-cors', (req, res) => {
   res.json({
     message: 'CORS is working!',
     timestamp: new Date().toISOString(),
-    origin: req.headers.origin || 'no origin',
   });
 });
 
@@ -63,11 +59,10 @@ app.get('/', (req, res) => {
     message: 'Meeting Room Management API',
     version: '1.0.0',
     cors_enabled: true,
-    allowed_origin: 'https://meeting-room-management-frontend.vercel.app',
   });
 });
 
-// Your routes
+// Routes
 app.use('/api', authRoutes);
 app.use('/api', userRoutes);
 app.use('/api', roomRoutes);
@@ -75,7 +70,8 @@ app.use('/api', bookingRoutes);
 app.use('/api', adminExportRoutes);
 app.use(errorHandler);
 
-app.listen(PORT, () => {
+// Bind to 0.0.0.0 for Render compatibility
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`✅ CORS enabled for: ${corsOptions.origin}`);
 });
