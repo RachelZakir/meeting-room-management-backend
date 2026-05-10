@@ -16,36 +16,9 @@ const adminExportRoutes = require('./routes/adminExportRoutes');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ✅ FIXED CORS CONFIGURATION
-const allowedOrigins = [
-  'http://localhost:3000',
-  'http://localhost:3001',
-  'https://meeting-room-management-frontend.vercel.app',
-  'https://meeting-room-management-frontend.vercel.app',
-  /\.vercel\.app$/,
-  /\.onrender\.com$/,
-];
-
+// ✅ SIMPLE, WORKING CORS CONFIGURATION
 const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl)
-    if (!origin) return callback(null, true);
-
-    // Check if origin is allowed
-    const isAllowed = allowedOrigins.some((allowedOrigin) => {
-      if (allowedOrigin instanceof RegExp) {
-        return allowedOrigin.test(origin);
-      }
-      return allowedOrigin === origin;
-    });
-
-    if (isAllowed) {
-      callback(null, true);
-    } else {
-      console.log('❌ Blocked CORS request from:', origin);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: 'https://meeting-room-management-frontend.vercel.app', // Your exact frontend URL
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: [
@@ -58,15 +31,17 @@ const corsOptions = {
   optionsSuccessStatus: 200,
 };
 
-// ✅ Apply CORS middleware BEFORE all routes
+// Apply CORS middleware
 app.use(cors(corsOptions));
 
-// ✅ Handle preflight requests explicitly
+// Handle preflight requests explicitly
 app.options('*', cors(corsOptions));
 
-// ✅ Log all requests for debugging (put after CORS)
+// Logging middleware to debug
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path} - Origin: ${req.headers.origin}`);
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  console.log('Origin:', req.headers.origin);
+  console.log('CORS Headers set:', res.getHeaders());
   next();
 });
 
@@ -74,24 +49,25 @@ app.use(express.json());
 app.use(morgan('dev'));
 app.use(cookieParser());
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+// Test endpoint to verify CORS is working
+app.get('/test-cors', (req, res) => {
+  res.json({
+    message: 'CORS is working!',
+    timestamp: new Date().toISOString(),
+    origin: req.headers.origin || 'no origin',
+  });
 });
 
 app.get('/', (req, res) => {
   res.json({
     message: 'Meeting Room Management API',
     version: '1.0.0',
-    endpoints: {
-      users: 'POST /api/users - Register user',
-      rooms: 'GET /api/rooms - List rooms',
-      rooms_create: 'POST /api/rooms - Create room',
-    },
+    cors_enabled: true,
+    allowed_origin: 'https://meeting-room-management-frontend.vercel.app',
   });
 });
 
-// Routes
+// Your routes
 app.use('/api', authRoutes);
 app.use('/api', userRoutes);
 app.use('/api', roomRoutes);
@@ -101,6 +77,5 @@ app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📝 API available at http://localhost:${PORT}`);
-  console.log(`✅ CORS enabled for origins:`, allowedOrigins);
+  console.log(`✅ CORS enabled for: ${corsOptions.origin}`);
 });
