@@ -15,23 +15,44 @@ const adminExportRoutes = require('./routes/adminExportRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
 const corsOptions = {
-  origin: [
-    'http://localhost:3000',
-    'https://meeting-room-management-frontend.vercel.app',
-  ],
+  origin: function (origin, callback) {
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'https://meeting-room-management-frontend.vercel.app',
+      'https://meeting-room-management-frontend.vercel.app/',
+      /\.vercel\.app$/,
+      /\.onrender\.com$/,
+    ];
+
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+
+    // Check if origin is allowed
+    const allowed = allowedOrigins.some((allowedOrigin) => {
+      if (allowedOrigin instanceof RegExp) {
+        return allowedOrigin.test(origin);
+      }
+      return allowedOrigin === origin;
+    });
+
+    if (allowed) {
+      callback(null, true);
+    } else {
+      console.log('Blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+  exposedHeaders: ['Set-Cookie'],
 };
 
-// ✅ Apply CORS first
+// Apply CORS before all routes
 app.use(cors(corsOptions));
-// ✅ Remove or replace the invalid line
-// app.options('*', cors(corsOptions)); ❌
-// app.options('/*', cors(corsOptions)); ✅ optional
-
+app.options('*', cors(corsOptions)); // Handle preflight requests
 app.use(express.json());
 app.use(morgan('dev'));
 app.use(cookieParser());
