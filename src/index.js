@@ -29,7 +29,7 @@ app.use(express.json());
 app.use(morgan('dev'));
 app.use(cookieParser());
 
-// ✅ HEALTH CHECK ENDPOINT (fixes 404)
+// ✅ Health check
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'healthy',
@@ -38,7 +38,7 @@ app.get('/health', (req, res) => {
   });
 });
 
-// ✅ ROOT ENDPOINT (fixes 404)
+// ✅ Root endpoint
 app.get('/', (req, res) => {
   res.json({
     message: 'Meeting Room Management API',
@@ -62,8 +62,8 @@ app.use('/api', roomRoutes);
 app.use('/api', bookingRoutes);
 app.use('/api', adminExportRoutes);
 
-// ✅ 404 handler for unmatched routes
-app.use('*', (req, res) => {
+// ✅ 404 handler for unmatched routes (NO '*' character!)
+app.use((req, res) => {
   res.status(404).json({
     success: false,
     message: `Cannot find ${req.originalUrl} on this server`,
@@ -82,8 +82,5 @@ app.use(errorHandler);
 // ✅ Start server
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  console.log(
-    `✅ Health check: https://meeting-room-management-backend.onrender.com/health`
-  );
   console.log(`✅ CORS enabled for: ${corsOptions.origin}`);
 });
