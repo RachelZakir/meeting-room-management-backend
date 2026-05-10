@@ -16,20 +16,45 @@ const adminExportRoutes = require('./routes/adminExportRoutes');
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// ✅ CORS Configuration
-const corsOptions = {
-  origin: 'https://meeting-room-management-frontend.vercel.app',
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
-};
+// ✅ FIXED CORS - Allow your frontend domain
+app.use(
+  cors({
+    origin: 'https://meeting-room-management-frontend.vercel.app',
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'Cookie',
+      'X-Requested-With',
+    ],
+    exposedHeaders: ['Set-Cookie', 'Authorization'],
+  })
+);
 
-app.use(cors(corsOptions));
+// Handle preflight requests
+app.options('*', (req, res) => {
+  res.header(
+    'Access-Control-Allow-Origin',
+    'https://meeting-room-management-frontend.vercel.app'
+  );
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header(
+    'Access-Control-Allow-Methods',
+    'GET, POST, PUT, DELETE, OPTIONS, PATCH'
+  );
+  res.header(
+    'Access-Control-Allow-Headers',
+    'Content-Type, Authorization, Cookie'
+  );
+  res.sendStatus(200);
+});
+
 app.use(express.json());
 app.use(morgan('dev'));
 app.use(cookieParser());
 
-// ✅ Health check
+// Health check
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'healthy',
@@ -38,49 +63,36 @@ app.get('/health', (req, res) => {
   });
 });
 
-// ✅ Root endpoint
+// Root endpoint
 app.get('/', (req, res) => {
   res.json({
     message: 'Meeting Room Management API',
     version: '1.0.0',
-    environment: process.env.NODE_ENV || 'development',
-    endpoints: {
-      health: 'GET /health',
-      auth: 'POST /api/auth/login',
-      refresh: 'POST /api/auth/refresh',
-      users: 'POST /api/users',
-      rooms: 'GET /api/rooms',
-      bookings: 'GET /api/bookings',
-    },
+    cors_enabled: true,
+    allowed_origin: 'https://meeting-room-management-frontend.vercel.app',
   });
 });
 
-// ✅ Your API Routes
+// Your routes
 app.use('/api', authRoutes);
 app.use('/api', userRoutes);
 app.use('/api', roomRoutes);
 app.use('/api', bookingRoutes);
 app.use('/api', adminExportRoutes);
 
-// ✅ 404 handler for unmatched routes (NO '*' character!)
+// 404 handler
 app.use((req, res) => {
   res.status(404).json({
     success: false,
     message: `Cannot find ${req.originalUrl} on this server`,
-    availableEndpoints: [
-      '/api/auth/login',
-      '/api/auth/refresh',
-      '/health',
-      '/',
-    ],
   });
 });
 
-// ✅ Error handler
 app.use(errorHandler);
 
-// ✅ Start server
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`✅ CORS enabled for: ${corsOptions.origin}`);
+  console.log(
+    `✅ CORS enabled for: https://meeting-room-management-frontend.vercel.app`
+  );
 });
