@@ -14,64 +14,76 @@ const bookingRoutes = require('./routes/bookingRoutes');
 const adminExportRoutes = require('./routes/adminExportRoutes');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 
-// ✅ CORS Configuration - FIXED VERSION (no '*' in app.options)
+// ✅ CORS Configuration
 const corsOptions = {
   origin: 'https://meeting-room-management-frontend.vercel.app',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: [
-    'Content-Type',
-    'Authorization',
-    'Cookie',
-    'X-Requested-With',
-  ],
-  exposedHeaders: ['Set-Cookie', 'Authorization'],
-  optionsSuccessStatus: 200,
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
 };
 
-// Apply CORS middleware
 app.use(cors(corsOptions));
-
-// ✅ FIXED: Use app.use for OPTIONS instead of app.options('*', ...)
-app.use((req, res, next) => {
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-  next();
-});
-
 app.use(express.json());
 app.use(morgan('dev'));
 app.use(cookieParser());
 
-// Test endpoint
-app.get('/test-cors', (req, res) => {
-  res.json({
-    message: 'CORS is working!',
+// ✅ HEALTH CHECK ENDPOINT (fixes 404)
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'healthy',
     timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
   });
 });
 
+// ✅ ROOT ENDPOINT (fixes 404)
 app.get('/', (req, res) => {
   res.json({
     message: 'Meeting Room Management API',
     version: '1.0.0',
-    cors_enabled: true,
+    environment: process.env.NODE_ENV || 'development',
+    endpoints: {
+      health: 'GET /health',
+      auth: 'POST /api/auth/login',
+      refresh: 'POST /api/auth/refresh',
+      users: 'POST /api/users',
+      rooms: 'GET /api/rooms',
+      bookings: 'GET /api/bookings',
+    },
   });
 });
 
-// Routes
+// ✅ Your API Routes
 app.use('/api', authRoutes);
 app.use('/api', userRoutes);
 app.use('/api', roomRoutes);
 app.use('/api', bookingRoutes);
 app.use('/api', adminExportRoutes);
+
+// ✅ 404 handler for unmatched routes
+app.use('*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `Cannot find ${req.originalUrl} on this server`,
+    availableEndpoints: [
+      '/api/auth/login',
+      '/api/auth/refresh',
+      '/health',
+      '/',
+    ],
+  });
+});
+
+// ✅ Error handler
 app.use(errorHandler);
 
-// Bind to 0.0.0.0 for Render compatibility
+// ✅ Start server
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
+  console.log(
+    `✅ Health check: https://meeting-room-management-backend.onrender.com/health`
+  );
   console.log(`✅ CORS enabled for: ${corsOptions.origin}`);
 });
