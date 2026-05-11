@@ -16,26 +16,31 @@ const adminExportRoutes = require('./routes/adminExportRoutes');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// ✅ FIXED CORS - Allow your frontend domain
-const allowedOrigins = [
-  'https://meeting-room-management-frontend.vercel.app',
-  'http://localhost:3000',
-];
-
+// ✅ CORS Configuration
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps or curl)
+      // Allow requests without origin (Postman, mobile apps, curl)
       if (!origin) return callback(null, true);
-      if (allowedOrigins.indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        console.log('Blocked origin:', origin);
-        callback(new Error('Not allowed by CORS'));
+
+      // Allow localhost
+      if (origin === 'http://localhost:3000') {
+        return callback(null, true);
       }
+
+      // Allow all Vercel deployments
+      if (origin.endsWith('.vercel.app')) {
+        return callback(null, true);
+      }
+
+      console.log('Blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
     },
+
     credentials: true,
+
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+
     allowedHeaders: [
       'Content-Type',
       'Authorization',
@@ -45,35 +50,19 @@ app.use(
   })
 );
 
-// Handle preflight requests
-app.options(/.*/, (req, res) => {
-  res.header(
-    'Access-Control-Allow-Origin',
-    'https://meeting-room-management-frontend.vercel.app'
-  );
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header(
-    'Access-Control-Allow-Methods',
-    'GET, POST, PUT, DELETE, OPTIONS, PATCH'
-  );
-  res.header(
-    'Access-Control-Allow-Headers',
-    'Content-Type, Authorization, Cookie'
-  );
-  res.sendStatus(200);
-});
-
 app.use(express.json());
 app.use(morgan('dev'));
 app.use(cookieParser());
 
-// Health check
+// ✅ Health check route
 app.get('/health', (req, res) => {
-  res
-    .status(200)
-    .json({ status: 'healthy', timestamp: new Date().toISOString() });
+  res.status(200).json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+  });
 });
 
+// ✅ Root route
 app.get('/', (req, res) => {
   res.json({
     message: 'Meeting Room Management API',
@@ -82,23 +71,26 @@ app.get('/', (req, res) => {
   });
 });
 
-// Routes
+// ✅ API Routes
 app.use('/api', authRoutes);
 app.use('/api', userRoutes);
 app.use('/api', roomRoutes);
 app.use('/api', bookingRoutes);
 app.use('/api', adminExportRoutes);
 
-// 404 handler
+// ✅ 404 Handler
 app.use((req, res) => {
-  res
-    .status(404)
-    .json({ success: false, message: `Cannot find ${req.originalUrl}` });
+  res.status(404).json({
+    success: false,
+    message: `Cannot find ${req.originalUrl}`,
+  });
 });
 
+// ✅ Error Handler
 app.use(errorHandler);
 
+// ✅ Start Server
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`✅ CORS enabled for frontend`);
+  console.log(`✅ CORS enabled`);
 });
