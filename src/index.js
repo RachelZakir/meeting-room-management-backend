@@ -46,7 +46,7 @@ app.use(
 );
 
 // Handle preflight requests
-app.options('*', (req, res) => {
+app.options(/.*/, (req, res) => {
   res.header(
     'Access-Control-Allow-Origin',
     'https://meeting-room-management-frontend.vercel.app'
